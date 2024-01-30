@@ -1,0 +1,272 @@
+---
+title: "Fruit and Vegetable Prices"
+author: "Priya"
+date: "11/01/2023"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Question1
+ describe the data and how I obtained the data.
+
+## Answer
+I have downloaded  " Fruit and Vegetable Prices" dataset from the Data.gov site. It is the United States government's open data website. It provides access to datasets published by agencies across the federal government. 
+
+Direct link to download this dataset is given below:
+https://catalog.data.gov/dataset/fruit-and-vegetable-prices
+
+Fruit and Vegetable Prices dataset is updated on: February 24, 2021 
+
+Objective of this dataset is how much do fruits and vegetables cost? 
+
+
+# Question2
+
+How did I address cleaning the data? What did I do for missing data (if any)? What rows and columns did I delete? 
+
+## Answer:
+This is the clean dataset. It is mention somewhere on the website that it contains 153 observations but after download I checked it has 62 observations only. It did not have any missing data.
+
+Dataset contain 8 columns:
+
+Fruit: name of the different fruits (character)
+Form: form of the fruit such as fresh or frozen (categorical variable)
+RetailPrice : price in integer
+RetailPriceUnit: unit (character/categorical variable)
+Yield: integer
+CupEquivalentSize: integer
+CupEquivalentUnit : categorical variable
+CupEquivalentPrice: integer
+
+```{r}
+
+fruit <- read.csv("Fruit Prices 2020.csv")
+head(fruit, 5)
+
+```
+
+# Question3:
+
+ a brief description of what data observance.
+
+
+## Answer
+
+```{r}
+#summary(fruit)
+# convert to factor
+fruit$Form <- as.factor(fruit$Form)
+summary(fruit)
+
+```
+
+After checking the summary of the variables Retail price and CupEquivalentSize shows big variation in the data as max value is very high as compare to the other stats for these both variable.
+
+### boxplot for fruits retail price
+
+```{r}
+
+boxplot(fruit$RetailPrice~fruit$Form,
+	main = "Retail price of fruit",
+	cex = 0.4,
+	col = c("red","blue"),
+	xlab = "Form of fruit", ylab = "ReatilPrice")
+
+```
+The above boxplot shows the prices of the Form of the fruit varies. Retail price of the dried fruit is highest. It indicates dried fruits are most expensive in all these form of the fruit.
+
+### boxplot for fruits Cup equivalent price
+```{r}
+boxplot(fruit$CupEquivalentPrice~fruit$Form,
+	main = "Cup Equivalent Price of fruit",
+	cex = 0.4,
+	col = c("red","blue"),
+	xlab = "Form of fruit", ylab = "Cup Equivalent Price")
+```
+When I checked the cup equivalent price for the form of the fruits, it does not show big variation in the price across these form of the fruit. Juice showed the cheapest.
+
+### Summary and  boxplot for fruits cup equivalent size
+
+```{r}
+# summary of Canned fruit form 
+summary(fruit$CupEquivalentSize[fruit$Form == "Canned"])
+# summary of Fresh fruit form 
+summary(fruit$CupEquivalentSize[fruit$Form == "Fresh"])
+# summary of Juice fruit form 
+summary(fruit$CupEquivalentSize[fruit$Form == "Juice"])
+
+# boxplot
+boxplot(fruit$CupEquivalentSize~fruit$Form,
+	main = "Cup equivalent size of fruit",
+	cex = 0.4,
+	col = c("red","blue"),
+	xlab = "Form of fruit", ylab = "Cup Equivalent Size")
+```
+These boxplots represent the cup equivalent size and we see line instead of boxplot here. It is beacuse if we see the stats lower quartile, median, upper quartile all are almost same for these form. I have shown the summary of Canned, fresh and Juice form of the fruit. For example: In the Juice form lower quartile, median and upper quartile, everything is 8, so we will see a line instead of boxplot. It is because this is unit of measurement.  
+As Juice cup eqivalent size is 8, which is much higher than other. It is because juice is measured in fluid ounces here and other unit are in the pounds. That means it is not appropriate to visualize it on the different unit for cup equivalent size. We probably need to convert fluid ounces in pound (pound = ounces/16) to see everything at the same unit. 
+
+### Boxplot: After converting the unit in pound for cup equivalent size
+```{r}
+newCupEquivalentSize <- c()
+newCupEquivalentSize <- fruit$CupEquivalentSize
+newCupEquivalentSize[fruit$Form == "Juice"] <- fruit$CupEquivalentSize/16
+
+# add into dataframe
+fruit <- cbind(fruit, newCupEquivalentSize)
+
+boxplot(fruit$newCupEquivalentSize*fruit$CupEquivalentSize ~ fruit$Form,
+	main = "Cup equivalent size of fruit in pounds",
+	cex = 0.4,
+	col = c("red","blue"),
+	xlab = "Form of fruit", ylab = "Cup Equivalent Size")
+```
+After converting the ounces in pounds we do see all form of fruit have similar cup equivalent size. Juice has one outlier.
+
+# Question4: 
+
+Generate a three histograms with an overlaid density plot, one for each of your three numeric variables, separated by one of your categorical variables.
+
+Provide the R code
+Followed by graphs
+Followed by a brief description of what you see (in complete sentences). You can compare the histograms/density plots of the categories.
+
+## Answer
+
+### Histogram of retail price of dried fruit with overlaid density plot
+```{r}
+
+dens_dried <- density(fruit$RetailPrice[fruit$Form == "Dried"], bw = 0.5)
+#plot(dens_dried)
+
+hist(fruit$RetailPrice[fruit$Form == "Dried"],
+     freq = F,
+     cex.axis = 0.8,
+     col=rgb(1,0,0,0.25),
+     xlim= c(2,12),
+     ylim = c(0,0.4),
+     main = "Dried fruit retail price",
+     xlab = "Dried fruit retail price",
+     breaks = seq(2,12,1))
+
+ lines(dens_dried, lwd = 2, col = "red", lty = 2)
+ 
+```
+
+Histogram and density plot represent that most of the retail price for dried fruit around 6. There are some dried fruit which are even more expensive and can be found around  10-11 bin.
+
+### Histogram of retail price of fresh fruit with overlaid density plot
+```{r}
+dens_fresh <- density(fruit$RetailPrice[fruit$Form == "Fresh"], bw = 0.5)
+#plot(dens_fresh)
+
+hist(fruit$RetailPrice[fruit$Form == "Fresh"],
+     freq = F,
+     cex.axis = 0.8,
+     col=rgb(0,1,0,0.25),
+     xlim= c(0,8),
+     ylim = c(0,0.5),
+     main = "Fresh fruit retail price",
+     xlab = "Fresh fruit retail price",
+     breaks = seq(0,10,1))
+
+ lines(dens_fresh, lwd = 2, col = "green", lty = 2)
+ 
+```
+Fresh fruit are cheaper than dried fruit and start from 0 to 4. Most of then can be purchased from `$1` to `$2` per pound. There are some fruit which are expensive those are blackberries.   
+
+# Question 5
+
+Create a bar plot showing the count of one of the categorical variables.
+
+Provide the R code
+Followed by graphs
+Followed by a brief description of any patterns that you might see.
+
+## Answer
+```{r}
+library(stringr)
+frozen_fruit <- fruit$RetailPrice[fruit$Form == "Juice"]
+frozen_fruit_name <- fruit$Fruit[fruit$Form == "Juice"]
+frozen_fruit 
+
+frozen_fruit_name <- str_replace(frozen_fruit_name, "ready-to-drink","rd")
+frozen_fruit_name <- str_replace(frozen_fruit_name, "frozen concentrate","fc")
+
+barplot(frozen_fruit,
+        ylab = "Retail price of Juices",
+        xlab= "Juice",
+        names.arg = frozen_fruit_name,
+        cex.names=0.60,
+        col = c("blue","cyan"),
+ las=2)
+
+```
+The barplot shows the retail prices of variety of Juice flavors. Here rd means Ready to drink and fc means frozen concentrate. Pomegranate read to drink shows relatively expensive than other juices.
+
+
+# Question 6:
+
+Create a bar plot showing the by-group (category) average of one of the numeric variables:
+
+Provide the R code
+Followed by graphs
+Followed by a brief description of any patterns that we might see.
+
+## Answer
+### Barplot for average retail price for all form of the fruit
+```{r}
+avg_retail_price <- aggregate(RetailPrice~Form, data = fruit, FUN = mean)
+avg_retail_price
+barplot(avg_retail_price$RetailPrice,
+        names.arg = avg_retail_price$Form,
+        xlab = "Form of fruit",
+        ylab = "Average retail price",
+        col= c("red","green","yellow","cyan","blue"))
+
+```
+Barplot explains that average value of dried fruit are highest and follow by frozen fruits. Juices are the cheapest but I will conclude that fresh fruit are not very expensive and good to health. 
+
+### Barplot for average cub equivalent price for all form of the fruit
+
+```{r}
+avg_cup_price <- aggregate(CupEquivalentPrice ~ Form, data = fruit, FUN = mean)
+avg_cup_price
+
+barplot(avg_cup_price$CupEquivalentPrice,
+        names.arg = avg_cup_price$Form,
+        xlab = "Form of fruit",
+        ylab = "Average cup equivalent price ",
+        col= c("red","green","yellow","cyan","blue"))
+
+```
+I have also plotted barplot for the average cup equivalent price. This is based on the cup size but this one is not as clear as the retail price. 
+
+
+# Question 7:
+Create an interesting pie chart.
+
+Provide the R code
+Followed by graphs
+Followed by a brief description of any patterns that I might see.
+
+## Answer
+```{r}
+
+fruit_form_table <- table(fruit$Form)
+fruit_form_table <- round(prop.table(fruit_form_table), 2)	
+fruit_form_lab <- paste(names(fruit_form_table), "\n",fruit_form_table *100,  "%", sep= "" )
+
+pie(fruit_form_table, 
+    label = fruit_form_lab,
+    main = "Number of different form of fruit",
+    radius = 0.8)
+
+```
+This pie chart is showing percentage of the different form of the fruit available in the datasets. Pie charts inform us that variety of fresh fruits are available which is 39%. Frozen fruit has a least variety in the market or datasets.
+
+
+
